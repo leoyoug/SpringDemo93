@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/aop
+    http://www.springframework.org/schema/aop/spring-aop.xsd
+    http://www.springframework.org/schema/tx
+    http://www.springframework.org/schema/tx/spring-tx.xsd">
+  <context:component-scan base-package="com.touch.combine"></context:component-scan>
+    <context:annotation-config></context:annotation-config>
+    <bean id="service" class="com.touch.test.UserService"></bean>
+    <bean id="advise" class="com.touch.test.AdviseUser"></bean>
+    <!--<bean id="ser"  class="com.touch.combine.Serviceimp"></bean>-->
+    <context:property-placeholder location="test.properties"></context:property-placeholder>
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="com.mysql.jdbc.Driver"></property>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3308/javaee"></property>
+
+        <property name="user" value="work"></property>
+        <property name="password" value="123456"></property>
+    </bean>
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    <!--配置hibernate的数据源sessionfactory-->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"></property>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+                <prop key="hibernate.format_sql">true</prop>
+                <prop key="hibernate.show_sql">true</prop>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+            </props>
+        </property>
+        <property name="mappingResources">
+            <list>
+                <value>Person.hbm.xml</value>
+                <value>Order.hbm.xml</value>
+                <value>User.hbm.xml</value>
+            </list>
+        </property>
+    </bean>
+    <!--配置hibernate模板-->
+    <bean id="template" class="org.springframework.orm.hibernate4.HibernateTemplate">
+        <property name="sessionFactory" ref="sessionFactory"></property>
+    </bean>
+
+   <!--配置事务管理器-->
+    <bean class="org.springframework.orm.hibernate4.HibernateTransactionManager" id="txManager">
+        <property name="sessionFactory" ref="sessionFactory"></property>
+    </bean>
+
+    <!--将事务管理器进行分配？-->
+    <tx:advice transaction-manager="txManager" id="advice">
+        <tx:attributes>
+            <tx:method name="*" read-only="false"/>
+        </tx:attributes>
+    </tx:advice>
+    <!--将以下的方法进行切面通知-->
+    <aop:config>
+        <aop:pointcut id="tx" expression="execution(* com.touch.combine..*.*(..))"></aop:pointcut>
+        <aop:advisor advice-ref="advice" pointcut-ref="tx"></aop:advisor>
+    </aop:config>
+    <aop:config>
+        <aop:aspect ref="advise">
+            <aop:pointcut id="user" expression="execution(* com.touch.test..*(..))"></aop:pointcut>
+            <aop:around method="around" pointcut-ref="user"></aop:around>
+        </aop:aspect>
+    </aop:config>
+</beans>

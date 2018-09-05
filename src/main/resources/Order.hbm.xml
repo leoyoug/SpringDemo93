@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+   package:配置这个package的作用是 为了我们后面在书写这个HQL语句的时候 直接就可以写对象
+       如果是没有配置这个package的话 那么是需要编写全路径的
+-->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.touch.combine.Order" table="t_order">
+        <id name="id" column="id">
+            <generator class="native"></generator>
+        </id>
+        <property name="name" column="name"></property>
+        <many-to-one name="person" class="com.touch.combine.Person" column="oid">
+        </many-to-one>
+    </class>
+</hibernate-mapping>
